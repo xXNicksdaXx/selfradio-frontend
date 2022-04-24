@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:selfradio/models/song.dart';
 
 void main() => runApp(const Selfradio());
 
 class Selfradio extends StatelessWidget {
   const Selfradio({Key? key}) : super(key: key);
 
-  static const String _title = 'Selfradio';
+  static const String title = 'Selfradio';
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: _title,
+      title: title,
       home: NavBar(),
     );
   }
@@ -20,31 +21,24 @@ class NavBar extends StatefulWidget {
   const NavBar({Key? key}) : super(key: key);
 
   @override
-  State<NavBar> createState() => _NavBarState();
+  State<NavBar> createState() => NavBarState();
 }
 
-class _NavBarState extends State<NavBar> {
-  int _selectedIndex = 0;
-  static const TextStyle optionStyle =
-  TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  static const List<Widget> _widgetOptions = <Widget>[
+class NavBarState extends State<NavBar> {
+  int selectedIndex = 0;
+  static const List<Widget> pages = <Widget>[
     Text(
       'Home',
-      style: optionStyle,
     ),
     Text(
       'Song',
-      style: optionStyle,
     ),
-    Text(
-      'Playlist',
-      style: optionStyle,
-    ),
+    SongList(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      selectedIndex = index;
     });
   }
 
@@ -55,11 +49,19 @@ class _NavBarState extends State<NavBar> {
         title: const Text('Selfradio'),
         backgroundColor: Colors.black87,
       ),
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+      body: IndexedStack(
+        index: selectedIndex,
+        children: pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.shifting, // Shifting
+        currentIndex: selectedIndex,
+        selectedIconTheme: const IconThemeData(color: Colors.deepOrangeAccent, size: 33),
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        enableFeedback: false,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home_rounded),
@@ -77,48 +79,47 @@ class _NavBarState extends State<NavBar> {
             backgroundColor: Colors.black,
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepOrangeAccent,
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
-        enableFeedback: false,
-        showSelectedLabels: false,
       ),
     );
   }
-
-  // @override
-  // // Widget build(BuildContext context) {
-  // //   return Scaffold(
-  // //     appBar: AppBar(
-  // //       title: const Text('Selfradio'),
-  //     ),
-  //     body: Center(
-  //       child: _widgetOptions.elementAt(_selectedIndex),
-  //     ),
-  //     bottomNavigationBar: BottomNavigationBar(
-  //       items: const <BottomNavigationBarItem>[
-  //         BottomNavigationBarItem(
-  //           icon: Icon(Icons.library_music_rounded),
-  //           label: 'Queue',
-  //           backgroundColor: Colors.black,
-  //         ),
-  //         BottomNavigationBarItem(
-  //           icon: Icon(Icons.audiotrack_rounded),
-  //           label: 'Song',
-  //           backgroundColor: Colors.black,
-  //         ),
-  //         BottomNavigationBarItem(
-  //           icon: Icon(Icons.list_rounded),
-  //           label: 'Playlist',
-  //           backgroundColor: Colors.black,
-  //         ),
-  //       ],
-  //       currentIndex: _selectedIndex,
-  //       selectedItemColor: Colors.deepOrangeAccent,
-  //       onTap: _onItemTapped,
-  //     ),
-  //   );
-  // }
 }
 
+class SongList extends StatefulWidget{
+  const SongList({Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return SongListState();
+  }
+}
+
+class SongListState extends State<SongList>{
+
+  late Future<List<Song>> songs;
+
+  @override
+  void initState() {
+    super.initState();
+    songs = fetchAllSongs();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Song>>(
+        future: songs,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, int index) {
+                  return Text(snapshot.data![index].title);
+                });
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          } else {
+            return const CircularProgressIndicator();
+          }
+        }
+    );
+  }
+}
