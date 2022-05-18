@@ -58,7 +58,7 @@ class NavigationBarState extends State<NavigationBar> {
             backgroundColor: Colors.black,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_rounded),
+            icon: Icon(Icons.list),
             label: 'Playlist',
             backgroundColor: Colors.black,
           ),

@@ -13,7 +13,7 @@ class SongService {
     if(response.statusCode == 200) {
       Iterable jsonResponse = json.decode(response.body);
       List<Song> songs = List<Song>.from(jsonResponse.map(
-              (song) => Song.fromJson(song) //decode song-json to song-object
+              (song) => Song.fromJson(song) // decode song-json to song-object
       ));
       return songs;
     } else {
