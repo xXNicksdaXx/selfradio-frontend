@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:selfradio/src/views/commons/volume_slider.dart';
 
 class PlayerButtons extends StatelessWidget {
   const PlayerButtons(this.audioPlayer, {Key? key}) : super(key: key);
@@ -40,6 +41,13 @@ class PlayerButtons extends StatelessWidget {
           stream: audioPlayer.loopModeStream,
           builder: (context, snapshot) {
             return repeatButton(context, snapshot.data ?? LoopMode.off);
+          },
+        ),
+        VolumeSlider(audioPlayer),
+        StreamBuilder<double>(
+          stream: audioPlayer.volumeStream,
+          builder: (context, snapshot) {
+            return muteButton(snapshot.data ?? 1);
           },
         ),
       ],
@@ -150,6 +158,28 @@ class PlayerButtons extends StatelessWidget {
               (cycleModes.indexOf(loopMode) + 1) % cycleModes.length
             ]);
       },
+    );
+  }
+
+  Widget muteButton(double volume) {
+    Icon mute;
+    bool isMuted;
+    if(volume == 0) {
+      mute = const Icon(Icons.volume_off_rounded);
+      isMuted = true;
+    } else {
+      mute = const Icon(Icons.volume_mute_rounded);
+      isMuted = false;
+    }
+    return IconButton(
+        icon: mute,
+        onPressed: () {
+          if(isMuted) {
+            audioPlayer.setVolume(1);
+          } else {
+            audioPlayer.setVolume(0);
+          }
+        }
     );
   }
 }
