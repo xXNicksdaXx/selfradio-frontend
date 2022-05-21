@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:selfradio/src/views/song_list.dart';
+import 'package:selfradio/src/views/music_player.dart';
+
 
 class NavigationBar extends StatefulWidget {
   const NavigationBar({Key? key}) : super(key: key);
@@ -14,9 +16,7 @@ class NavigationBarState extends State<NavigationBar> {
     Text(
       'Home',
     ),
-    Text(
-      'Song',
-    ),
+    MusicPlayer(),
     SongList(),
   ];
 
