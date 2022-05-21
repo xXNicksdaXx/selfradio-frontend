@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:selfradio/src/views/commons/player_buttons.dart';
 
 class MusicPlayer extends StatefulWidget {
   const MusicPlayer({Key? key}) : super(key: key);
@@ -35,58 +36,7 @@ class MusicPlayerState extends State<MusicPlayer> {
   @override
   Widget build(BuildContext context) {
     return Center(
-        child: StreamBuilder<PlayerState>(
-          stream: audioPlayer.playerStateStream,
-          builder: (context, snapshot) {
-            final playerState = snapshot.data;
-            return playerButton(playerState!);
-          },
-        ),
+        child: PlayerButtons(audioPlayer)
       );
-  }
-
-  Widget playerButton(PlayerState playerState) {
-
-    // extract processing state
-    final state = playerState.processingState;
-
-    if (state == ProcessingState.loading ||
-        state == ProcessingState.buffering) {
-      // loading
-      return Container(
-        margin: const EdgeInsets.all(8.0),
-        width: 64,
-        height: 64,
-        child: const CircularProgressIndicator(),
-      );
-    }
-
-    else if (audioPlayer.playing == false) {
-      // start playing
-      return IconButton(
-        icon: const Icon(Icons.play_arrow),
-        iconSize: 64,
-        onPressed: audioPlayer.play,
-      );
-    }
-
-    else if (state != ProcessingState.completed) {
-      // stop playing via pause
-      return IconButton(
-        icon: const Icon(Icons.pause),
-        iconSize: 64,
-        onPressed: audioPlayer.pause,
-      );
-    }
-
-    else {
-      // finished playing
-      return IconButton(
-        icon: const Icon(Icons.replay),
-        iconSize: 64,
-        onPressed: () => audioPlayer.seek(Duration.zero,
-            index: audioPlayer.effectiveIndices?.first),
-      );
-    }
   }
 }
