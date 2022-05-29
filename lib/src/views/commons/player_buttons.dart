@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:selfradio/src/views/commons/volume_slider.dart';
 
 class PlayerButtons extends StatelessWidget {
   const PlayerButtons(this.audioPlayer, {Key? key}) : super(key: key);
@@ -9,47 +8,74 @@ class PlayerButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        StreamBuilder<bool>(
-          stream: audioPlayer.shuffleModeEnabledStream,
-          builder: (context, snapshot) {
-            return shuffleButton(context, snapshot.data ?? false);
-          },
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StreamBuilder<bool>(
+              stream: audioPlayer.shuffleModeEnabledStream,
+              builder: (context, snapshot) {
+                return shuffleButton(context, snapshot.data ?? false);
+              },
+            ),
+            StreamBuilder<SequenceState?>(
+              stream: audioPlayer.sequenceStateStream,
+              builder: (_, __) {
+                return previousButton();
+              },
+            ),
+            StreamBuilder<PlayerState>(
+              stream: audioPlayer.playerStateStream,
+              builder: (_, snapshot) {
+                final playerState = snapshot.data;
+                return playPauseButton(playerState!);
+              },
+            ),
+            StreamBuilder<SequenceState?>(
+              stream: audioPlayer.sequenceStateStream,
+              builder: (_, __) {
+                return nextButton();
+              },
+            ),
+            StreamBuilder<LoopMode>(
+              stream: audioPlayer.loopModeStream,
+              builder: (context, snapshot) {
+                return repeatButton(context, snapshot.data ?? LoopMode.off);
+              },
+            ),
+            ],
         ),
-        StreamBuilder<SequenceState?>(
-          stream: audioPlayer.sequenceStateStream,
-          builder: (_, __) {
-            return previousButton();
-          },
-        ),
-        StreamBuilder<PlayerState>(
-          stream: audioPlayer.playerStateStream,
-          builder: (_, snapshot) {
-            final playerState = snapshot.data;
-            return playPauseButton(playerState!);
-          },
-        ),
-        StreamBuilder<SequenceState?>(
-          stream: audioPlayer.sequenceStateStream,
-          builder: (_, __) {
-            return nextButton();
-          },
-        ),
-        StreamBuilder<LoopMode>(
-          stream: audioPlayer.loopModeStream,
-          builder: (context, snapshot) {
-            return repeatButton(context, snapshot.data ?? LoopMode.off);
-          },
-        ),
-        VolumeSlider(audioPlayer),
-        StreamBuilder<double>(
-          stream: audioPlayer.volumeStream,
-          builder: (context, snapshot) {
-            return muteButton(snapshot.data ?? 1);
-          },
-        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StreamBuilder<double>(
+              stream: audioPlayer.volumeStream,
+              builder: (context, snapshot) {
+                return MuteButton(audioPlayer);
+              },
+            ),
+            StreamBuilder<double>(
+              stream: audioPlayer.volumeStream,
+              builder: (context, snapshot) {
+                return volumeDownButton(snapshot.data ?? 1);
+              },
+            ),
+            StreamBuilder<double>(
+              stream: audioPlayer.volumeStream,
+              builder: (context, snapshot) {
+                return volumeBar(snapshot.data ?? 1);
+              },
+            ),
+            StreamBuilder<double>(
+              stream: audioPlayer.volumeStream,
+              builder: (context, snapshot) {
+                return volumeUpButton(snapshot.data ?? 1);
+              },
+            ),
+          ],
+        )
       ],
     );
   }
@@ -161,10 +187,59 @@ class PlayerButtons extends StatelessWidget {
     );
   }
 
-  Widget muteButton(double volume) {
+  Widget volumeDownButton(double volume) {
+    return IconButton(
+        icon: const Icon(Icons.volume_down_rounded),
+        onPressed: () {
+          double currentVolume = audioPlayer.volume;
+          if(currentVolume >= 0.1) {
+            audioPlayer.setVolume(currentVolume - 0.1);
+          }
+        }
+    );
+  }
+
+  Widget volumeUpButton(double volume) {
+    return IconButton(
+        icon: const Icon(Icons.volume_up_rounded),
+        onPressed: () {
+          double currentVolume = audioPlayer.volume;
+          if(currentVolume <= 1.4) {
+            audioPlayer.setVolume(currentVolume + 0.1);
+          }
+        }
+    );
+  }
+
+  Widget volumeBar(double volume) {
+    return Slider(
+      min: 0.0,
+      max: 1.5,
+      onChanged: (value) => value = volume,
+      value: volume,
+    );
+  }
+}
+
+class MuteButton extends StatefulWidget {
+  const MuteButton(this.audioPlayer, {Key? key}) : super(key: key);
+
+  final AudioPlayer audioPlayer;
+
+  @override
+  State<StatefulWidget> createState() => MuteButtonState();
+}
+
+class MuteButtonState extends State<MuteButton> {
+
+  double volume = 1;
+
+  @override
+  Widget build(BuildContext context) {
     Icon mute;
     bool isMuted;
-    if(volume == 0) {
+    double currentVolume = widget.audioPlayer.volume;
+    if(currentVolume == 0) {
       mute = const Icon(Icons.volume_off_rounded);
       isMuted = true;
     } else {
@@ -175,9 +250,10 @@ class PlayerButtons extends StatelessWidget {
         icon: mute,
         onPressed: () {
           if(isMuted) {
-            audioPlayer.setVolume(1);
+            widget.audioPlayer.setVolume(volume);
           } else {
-            audioPlayer.setVolume(0);
+            volume = widget.audioPlayer.volume;
+            widget.audioPlayer.setVolume(0);
           }
         }
     );
